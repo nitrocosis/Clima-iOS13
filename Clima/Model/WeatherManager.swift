@@ -8,8 +8,14 @@
 
 import Foundation
 
+protocol WeatherManagerDelegate {
+    func didUpdateWeather(weather: WeatherModel)
+}
+
 struct WeatherManager {
     let weatherURL = "https://api.openweathermap.org/data/2.5/weather?appid=1cd20d1bee5336096f07aab4e6a7d6e3&units=metric"
+    
+    var delegate: WeatherManagerDelegate?
     
     func fetchWeather(cityName: String) {
         let URLString = "\(weatherURL)&q=\(cityName)"
@@ -32,7 +38,9 @@ struct WeatherManager {
                 }
                 
                 if let safeData = data {
-                    self.parseJSON(weatherData: safeData)
+                    if let weather = self.parseJSON(weatherData: safeData) {
+                        self.delegate?.didUpdateWeather(weather: weather)
+                    }
                 }
             }
             
@@ -42,36 +50,25 @@ struct WeatherManager {
         
         }
     
-    func parseJSON(weatherData: Data) {
+    func parseJSON(weatherData: Data) -> WeatherModel? {
         let decoder = JSONDecoder()
         do {
        let decodedData = try decoder.decode(WeatherData.self, from: weatherData)
-            print(getConditionName(weather: decodedData.weather[0].id))
+            
+            let id = decodedData.weather[0].id
+            let temp = decodedData.main.temp
+            let city = decodedData.name
+            
+            let weather = WeatherModel(conditionId: id, cityName: city, temperature: temp)
+            return weather
+            
+            print(weather.conditionName)
+            print(weather.temperatureString)
             
         } catch {
             print(error)
+            return nil
         }
 }
     
-    func getConditionName(weather: Int) -> String {
-        
-        switch weather {
-        case 200...232:
-            return "cloud.bolt"
-        case 300...321:
-            return "cloud.drizzle"
-        case 500...531:
-            return "cloud.rain"
-        case 600...622:
-            return "cloud.snow"
-        case 701...781:
-            return "cloud.fog"
-        case 800:
-            return "sun.max"
-        case 801...804:
-            return "cloud"
-        default:
-            return "zzz"
-        }
-    }
 }
