@@ -20,7 +20,7 @@ struct WeatherManager {
     
     func fetchWeather(cityName: String) {
         let URLString = "\(weatherURL)&q=\(cityName)"
-        performRequest(with: urlString)
+        performRequest(with: URLString)
     }
     
     func performRequest(with urlString: String) {
@@ -34,7 +34,7 @@ struct WeatherManager {
             //3. Give the session a task
             let task = session.dataTask(with: url) { (data, response, error) in
                 if error != nil {
-                    self.delegate?.didFailWithError(error: error)
+                    self.delegate?.didFailWithError(error: error!)
                     return
                 }
                 
@@ -62,9 +62,6 @@ struct WeatherManager {
             
             let weather = WeatherModel(conditionId: id, cityName: city, temperature: temp)
             return weather
-            
-            print(weather.conditionName)
-            print(weather.temperatureString)
             
         } catch {
             delegate?.didFailWithError(error: error)
